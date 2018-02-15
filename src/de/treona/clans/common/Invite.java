@@ -1,4 +1,4 @@
-package de.treona.clan.common;
+package de.treona.clans.common;
 
 import org.bukkit.entity.Player;
 

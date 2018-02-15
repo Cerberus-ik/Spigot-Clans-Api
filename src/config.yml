@@ -12,9 +12,14 @@
 eloBase: 1000
 eloK: 20
 
+#Scoreboard prefix
+setClanTagTabPrefix: false
+
 #Database settings
 dbHost: 'localhost'
-dbUser: 'clan'
+dbUser: 'clans'
 dbPassword: 'password'
-dbDb: 'clan'
+dbDb: 'clans'
 dbPort: 3306
+
+configVersion: 1

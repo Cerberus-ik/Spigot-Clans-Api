@@ -1,14 +1,13 @@
-package de.treona.clan.managers;
+package de.treona.clans.managers;
 
-import de.treona.clan.Clans;
-import de.treona.clan.common.Clan;
-import de.treona.clan.common.Invite;
+import de.treona.clans.Clans;
+import de.treona.clans.common.Clan;
+import de.treona.clans.common.Invite;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,7 +22,7 @@ public class InviteManager {
     public void sendInvite(Invite invite){
         if(!this.invites.contains(invite)){
             invite.getTargetPlayer().sendMessage(Clans.PREFIX_COLOR + " You got invited to: " + ChatColor.DARK_PURPLE  + invite.getClan().getClanName() + ChatColor.RESET + " by: " + Bukkit.getOfflinePlayer(invite.getClan().getOwner()).getName());
-            invite.getTargetPlayer().sendMessage(Clans.PREFIX_COLOR + " You can accept the invite with: " + ChatColor.GRAY + "/clan join " + invite.getClan().getClanName());
+            invite.getTargetPlayer().sendMessage(Clans.PREFIX_COLOR + " You can accept the invite with: " + ChatColor.GRAY + "/clans join " + invite.getClan().getClanName());
             this.invites.add(invite);
         }
     }

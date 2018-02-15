@@ -1,12 +1,13 @@
-package de.treona.clan;
+package de.treona.clans;
 
-import de.treona.clan.commands.ClanCommand;
-import de.treona.clan.common.Clan;
-import de.treona.clan.config.Config;
-import de.treona.clan.config.ConfigManager;
-import de.treona.clan.db.DatabaseCredentials;
-import de.treona.clan.db.DatabaseManager;
-import de.treona.clan.managers.InviteManager;
+import de.treona.clans.commands.ClanCommand;
+import de.treona.clans.common.Clan;
+import de.treona.clans.config.ConfigManager;
+import de.treona.clans.db.DatabaseCredentials;
+import de.treona.clans.db.DatabaseManager;
+import de.treona.clans.listener.ScoreboardUpdateListener;
+import de.treona.clans.managers.InviteManager;
+import de.treona.clans.util.ScoreboardUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -44,6 +45,11 @@ public class Clans extends JavaPlugin{
             super.getLogger().info("The clans table does not exist, creating it...");
             databaseManager.createTable();
             super.getLogger().info("Finished initializing.");
+        }
+
+        if(configManager.getConfig().getSetClanTagTabPrefix()){
+            Bukkit.getPluginManager().registerEvents(new ScoreboardUpdateListener(), this);
+            Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::updateScoreboard);
         }
     }
 

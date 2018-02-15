@@ -1,7 +1,7 @@
-package de.treona.clan.db;
+package de.treona.clans.db;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import de.treona.clan.common.Clan;
+import de.treona.clans.common.Clan;
 import org.json.JSONArray;
 
 import java.sql.Connection;
@@ -108,7 +108,7 @@ public class DatabaseManager {
     public Clan getClan(String clanName) {
         try {
             Connection connection = this.dataSource.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT clanId, clanName, clanTag, wins, losses, members, owner, elo FROM `clans` WHERE  clanName = ?;");
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT clanId, clanTag, wins, losses, members, owner, elo FROM `clans` WHERE  clanName = ?;");
             preparedStatement.setString(1, clanName);
             ResultSet resultSet = preparedStatement.executeQuery();
             if(!resultSet.next()){
@@ -116,15 +116,15 @@ public class DatabaseManager {
             }
             int clanId = resultSet.getInt(1);
             String clanTag = resultSet.getString(2);
-            int wins = resultSet.getInt(4);
-            int losses = resultSet.getInt(5);
+            int wins = resultSet.getInt(3);
+            int losses = resultSet.getInt(4);
             List<UUID> members = new ArrayList<>();
-            JSONArray memberArray = new JSONArray(resultSet.getString(6));
+            JSONArray memberArray = new JSONArray(resultSet.getString(5));
             for (int i = 0; i < memberArray.length(); i++) {
                 members.add(UUID.fromString(memberArray.getString(i)));
             }
-            UUID owner = UUID.fromString(resultSet.getString(7));
-            int elo = resultSet.getInt(8);
+            UUID owner = UUID.fromString(resultSet.getString(6));
+            int elo = resultSet.getInt(7);
             connection.close();
             resultSet.close();
             preparedStatement.close();
@@ -287,7 +287,7 @@ public class DatabaseManager {
     public void addClanLoss(int clanId) {
         try {
             Connection connection = this.dataSource.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE clans SET losses=clans.losses+1 WHERE clanId = ?;");
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE clans SET losses=losses+1 WHERE clanId = ?;");
             preparedStatement.setInt(1, clanId);
             preparedStatement.executeUpdate();
             connection.close();

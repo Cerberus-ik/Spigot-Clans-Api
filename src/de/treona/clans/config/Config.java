@@ -1,4 +1,4 @@
-package de.treona.clan.config;
+package de.treona.clans.config;
 
 public interface Config {
 
@@ -13,6 +13,8 @@ public interface Config {
     int getDbPort();
 
     int getBaseElo();
+
+    boolean getSetClanTagTabPrefix();
 
     int getEloK();
 

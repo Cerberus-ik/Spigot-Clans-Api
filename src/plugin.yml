@@ -1,6 +1,6 @@
-name: Clan
-main: de.treona.clan.Clans
-version: 1.0.0
+name: Clans
+main: de.treona.clans.Clans
+version: 1.1.0
 author: Treona
 description: Create and manage your clans with Clan.
 
@@ -8,4 +8,4 @@ commands:
   clan:
     description: Clans Clan command.
     usage: /cl
-    aliases: [cl]
+    aliases: [cl, clans]

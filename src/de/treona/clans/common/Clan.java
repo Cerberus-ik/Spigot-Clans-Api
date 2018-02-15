@@ -1,4 +1,4 @@
-package de.treona.clan.common;
+package de.treona.clans.common;
 
 import java.util.List;
 import java.util.UUID;

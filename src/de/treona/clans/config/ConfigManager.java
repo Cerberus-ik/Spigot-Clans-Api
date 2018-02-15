@@ -1,6 +1,6 @@
-package de.treona.clan.config;
+package de.treona.clans.config;
 
-import de.treona.clan.Clans;
+import de.treona.clans.Clans;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.bukkit.Bukkit;
@@ -27,6 +27,10 @@ public class ConfigManager {
         try {
             YamlConfiguration yamlConfiguration = new YamlConfiguration();
             yamlConfiguration.loadFromString(FileUtils.readFileToString(this.configFile));
+            if(!yamlConfiguration.contains("configVersion") || yamlConfiguration.getInt("configVersion") < 1){
+                this.backupConfig();
+                this.writeDefaultConfig();
+            }
             this.config = new Config() {
                 @Override
                 public String getDbHost() {
@@ -59,6 +63,11 @@ public class ConfigManager {
                 }
 
                 @Override
+                public boolean getSetClanTagTabPrefix() {
+                    return yamlConfiguration.getBoolean("setClanTagTabPrefix");
+                }
+
+                @Override
                 public int getEloK() {
                     return yamlConfiguration.getInt("eloK");
                 }
@@ -68,15 +77,24 @@ public class ConfigManager {
         }
     }
 
+    private void backupConfig(){
+        try {
+            FileUtils.copyFile(this.configFile, new File("plugins/Clan/backup_config.yml"));
+            Bukkit.getLogger().warning(Clans.PREFIX + " Backing up old config...");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void writeDefaultConfig(){
-        Bukkit.getLogger().info("Created the default config.");
+        Bukkit.getLogger().info(Clans.PREFIX + " Created the default config.");
         InputStream inputStream = Clans.getPlugin().getResource("config.yml");
         try {
             if(this.configDirectory.mkdirs()){
-                Clans.getPlugin().getLogger().info("Created the plugin directory.");
+                Clans.getPlugin().getLogger().info(Clans.PREFIX + " Created the plugin directory.");
             }
             if(this.configFile.createNewFile()){
-                Clans.getPlugin().getLogger().info("Created the default config.");
+                Clans.getPlugin().getLogger().info(Clans.PREFIX + " Created the default config.");
             }
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(this.configFile));
             IOUtils.copy(inputStream, bufferedWriter);
@@ -88,6 +106,6 @@ public class ConfigManager {
     }
 
     public Config getConfig() {
-        return config;
+        return this.config;
     }
 }

@@ -1,4 +1,4 @@
-package de.treona.clan.db;
+package de.treona.clans.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
