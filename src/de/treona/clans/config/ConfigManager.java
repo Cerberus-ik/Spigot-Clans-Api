@@ -1,11 +1,10 @@
 package de.treona.clans.config;
 
-import de.treona.clans.Clans;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 
@@ -14,20 +13,22 @@ public class ConfigManager {
     private Config config;
     private File configFile;
     private File configDirectory;
+    private JavaPlugin javaPlugin;
 
-    public ConfigManager() {
-        this.configFile = new File("plugins/Clan/config.yml");
-        this.configDirectory = new File("plugins/Clan/");
+    public ConfigManager(JavaPlugin javaPlugin) {
+        this.javaPlugin = javaPlugin;
+        this.configFile = new File(this.javaPlugin.getDataFolder(), "config.yml");
+        this.configDirectory = new File(this.javaPlugin.getDataFolder().getPath());
     }
 
-    public void loadConfig(){
-        if(!this.configFile.exists()){
+    public void loadConfig() {
+        if (!this.configFile.exists()) {
             this.writeDefaultConfig();
         }
         try {
             YamlConfiguration yamlConfiguration = new YamlConfiguration();
             yamlConfiguration.loadFromString(FileUtils.readFileToString(this.configFile));
-            if(!yamlConfiguration.contains("configVersion") || yamlConfiguration.getInt("configVersion") < 1){
+            if (!yamlConfiguration.contains("configVersion") || yamlConfiguration.getInt("configVersion") < 2) {
                 this.backupConfig();
                 this.writeDefaultConfig();
             }
@@ -63,7 +64,7 @@ public class ConfigManager {
                 }
 
                 @Override
-                public boolean getSetClanTagTabPrefix() {
+                public boolean setClanTagTabPrefix() {
                     return yamlConfiguration.getBoolean("setClanTagTabPrefix");
                 }
 
@@ -71,35 +72,43 @@ public class ConfigManager {
                 public int getEloK() {
                     return yamlConfiguration.getInt("eloK");
                 }
+
+                @Override
+                public boolean flushScoreboardOnJoin() {
+                    return yamlConfiguration.getBoolean("flushScoreboardOnJoin");
+                }
             };
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
     }
 
-    private void backupConfig(){
+    private void backupConfig() {
         try {
-            FileUtils.copyFile(this.configFile, new File("plugins/Clan/backup_config.yml"));
-            Bukkit.getLogger().warning(Clans.PREFIX + " Backing up old config...");
+            FileUtils.copyFile(this.configFile, new File(this.javaPlugin.getDataFolder(), "backup_config.yml"));
+            this.javaPlugin.getLogger().warning("Backing up old config...");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void writeDefaultConfig(){
-        Bukkit.getLogger().info(Clans.PREFIX + " Created the default config.");
-        InputStream inputStream = Clans.getPlugin().getResource("config.yml");
+    private void writeDefaultConfig() {
+        this.javaPlugin.getLogger().info("Created the default config.");
+        InputStream inputStream = this.javaPlugin.getResource("config.yml");
+        if (this.configDirectory.mkdirs()) {
+            this.javaPlugin.getLogger().info("Created the plugin directory.");
+        }
         try {
-            if(this.configDirectory.mkdirs()){
-                Clans.getPlugin().getLogger().info(Clans.PREFIX + " Created the plugin directory.");
+            if (this.configFile.createNewFile()) {
+                this.javaPlugin.getLogger().info("Created the default config.");
             }
-            if(this.configFile.createNewFile()){
-                Clans.getPlugin().getLogger().info(Clans.PREFIX + " Created the default config.");
-            }
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(this.configFile));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+
+        }
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(this.configFile))) {
             IOUtils.copy(inputStream, bufferedWriter);
-            bufferedWriter.flush();
-            bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

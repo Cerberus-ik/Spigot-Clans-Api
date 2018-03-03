@@ -3,6 +3,7 @@ package de.treona.clans.commands;
 import de.treona.clans.Clans;
 import de.treona.clans.common.Clan;
 import de.treona.clans.common.Invite;
+import de.treona.clans.util.ScoreboardUtil;
 import de.treona.clans.util.TreonaSound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -79,19 +80,19 @@ public class ClanCommand implements CommandExecutor {
             Player player = (Player) commandSender;
             Clan clan = Clans.getClan(player);
             if (clan == null) {
-                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You are not in a clans.");
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You are not in a clan.");
                 return;
             }
             if (!clan.getOwner().equals(player.getUniqueId())) {
-                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " Only the owner can delete a clans.");
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " Only the owner can delete a clan.");
                 return;
             }
             Clans.getDatabaseManager().deleteClan(clan.getClanId());
-            player.sendMessage(Clans.PREFIX_COLOR + ChatColor.RED + " You deleted the clans: " + ChatColor.DARK_PURPLE + clan.getClanName());
+            player.sendMessage(Clans.PREFIX_COLOR + ChatColor.RED + " You deleted the clan: " + ChatColor.DARK_PURPLE + clan.getClanName());
             clan.getMembers().forEach(uuid -> {
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
                 if (offlinePlayer.isOnline() && !offlinePlayer.getUniqueId().equals(clan.getOwner())) {
-                    offlinePlayer.getPlayer().sendMessage(Clans.PREFIX_COLOR + ChatColor.RED + " Your clans owner deleted: " + ChatColor.DARK_PURPLE + clan.getClanName());
+                    offlinePlayer.getPlayer().sendMessage(Clans.PREFIX_COLOR + ChatColor.RED + " Your clan owner deleted: " + ChatColor.DARK_PURPLE + clan.getClanName());
                 }
             });
         });
@@ -106,7 +107,7 @@ public class ClanCommand implements CommandExecutor {
             }
             Clan clan = Clans.getClan(player);
             if (clan == null) {
-                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You are not in a clans.");
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You are not in a clan.");
                 return;
             }
             if (!clan.getOwner().equals(player.getUniqueId())) {
@@ -123,7 +124,7 @@ public class ClanCommand implements CommandExecutor {
                 return;
             }
             if (!clan.getMembers().contains(targetPlayer.getUniqueId())) {
-                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This player is not in your clans.");
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This player is not in your clan.");
                 return;
             }
             List<UUID> members = clan.getMembers();
@@ -143,14 +144,14 @@ public class ClanCommand implements CommandExecutor {
             return;
         }
         if (args.length == 1) {
-            player.sendMessage(Clans.PREFIX_COLOR + " Please specify the clans you want to join.");
+            player.sendMessage(Clans.PREFIX_COLOR + " Please specify the clan you want to join.");
             return;
         }
         if (Clans.getInviteManager().accept(player, args[1])) {
             player.sendMessage(Clans.PREFIX_COLOR + " You successfully joined: " + ChatColor.RESET + args[1]);
             player.playSound(player.getLocation(), TreonaSound.LEVEL_UP.getBukkitSound(), 1, 1);
         } else {
-            player.sendMessage(Clans.PREFIX_COLOR + " You don't have an invite from this clans.");
+            player.sendMessage(Clans.PREFIX_COLOR + " You don't have an invite from this clan.");
         }
     }
 
@@ -159,7 +160,7 @@ public class ClanCommand implements CommandExecutor {
             Player player = (Player) commandSender;
             Clan clan = Clans.getClan(player.getUniqueId());
             if (clan == null) {
-                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You are not in a clans.");
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You are not in a clan.");
                 return;
             }
             if (args.length == 1) {
@@ -172,11 +173,11 @@ public class ClanCommand implements CommandExecutor {
                 return;
             }
             if (Clans.getClan(targetPlayer.getUniqueId()) != null) {
-                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This player is already in a clans.");
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This player is already in a clan.");
                 return;
             }
             if (!clan.getOwner().equals(player.getUniqueId())) {
-                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " Only the clans owner can invite people.");
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " Only the clan owner can invite people.");
                 return;
             }
             Clans.getInviteManager().sendInvite(new Invite() {
@@ -197,22 +198,23 @@ public class ClanCommand implements CommandExecutor {
     private void createClan(CommandSender commandSender, String[] args) {
         Bukkit.getScheduler().runTaskAsynchronously(Clans.getPlugin(), () -> {
             if (args.length < 3) {
-                commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You can create a clans with: " + ChatColor.GRAY + "/clans create <name> <tag>");
+                commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You can create a clan with: " + ChatColor.GRAY + "/clans create <name> <tag>");
                 return;
             }
             Player player = (Player) commandSender;
             String clanName = args[1];
             if (Clans.getDatabaseManager().isInAClan(player.getUniqueId())) {
-                commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You can only be in one clans at a time.");
+                commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You can only be in one clan at a time.");
                 return;
             }
             if (Clans.getDatabaseManager().isClanNameTaken(clanName)) {
-                commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This clans name is already taken.");
+                commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This clan name is already taken.");
                 return;
             }
             Clans.getDatabaseManager().createClan(clanName, args[2], Clans.getConfigManager().getConfig().getBaseElo(), player.getUniqueId());
-            player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GREEN + " Your clans got created successfully.");
+            player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GREEN + " Your clan got created successfully.");
             player.playSound(player.getLocation(), TreonaSound.LEVEL_UP.getBukkitSound(), 1, 1);
+            Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::updateScoreboard);
         });
     }
 
@@ -238,7 +240,7 @@ public class ClanCommand implements CommandExecutor {
     }
 
     private void printStats(Player player, Clan clan) {
-        player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GOLD + " Stats for the clans: " + ChatColor.DARK_AQUA + clan.getClanName() + ChatColor.GRAY + " [" + ChatColor.DARK_AQUA + clan.getClanTag() + ChatColor.GRAY + "]");
+        player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GOLD + " Stats for the clan: " + ChatColor.DARK_AQUA + clan.getClanName() + ChatColor.GRAY + " [" + ChatColor.DARK_AQUA + clan.getClanTag() + ChatColor.GRAY + "]");
         player.sendMessage(ChatColor.GOLD + " Owner: " + ChatColor.YELLOW + Bukkit.getOfflinePlayer(clan.getOwner()).getName());
         player.sendMessage(ChatColor.GOLD + " Members: " + ChatColor.YELLOW + clan.getMembers().size());
         player.sendMessage(ChatColor.GOLD + " Elo: " + ChatColor.YELLOW + clan.getElo());

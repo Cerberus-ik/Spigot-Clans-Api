@@ -12,10 +12,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Team;
 
 import java.util.List;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class Clans extends JavaPlugin{
 
     public static final String PREFIX_COLOR = ChatColor.GRAY + "[" + ChatColor.DARK_AQUA + "Clan" + ChatColor.GRAY + "]" + ChatColor.RESET;
@@ -30,7 +33,7 @@ public class Clans extends JavaPlugin{
         super.getCommand("Clan").setExecutor(new ClanCommand());
         plugin = this;
 
-        configManager = new ConfigManager();
+        configManager = new ConfigManager(this);
         configManager.loadConfig();
         databaseManager = new DatabaseManager(this.getDatabaseCredentials());
         inviteManager = new InviteManager();
@@ -47,7 +50,13 @@ public class Clans extends JavaPlugin{
             super.getLogger().info("Finished initializing.");
         }
 
-        if(configManager.getConfig().getSetClanTagTabPrefix()){
+        if(configManager.getConfig().flushScoreboardOnJoin()){
+            Bukkit.getScoreboardManager().getMainScoreboard().clearSlot(DisplaySlot.PLAYER_LIST);
+            Bukkit.getScoreboardManager().getMainScoreboard().getTeams().forEach(Team::unregister);
+            Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::flushScoreboard);
+        }
+
+        if(configManager.getConfig().setClanTagTabPrefix()){
             Bukkit.getPluginManager().registerEvents(new ScoreboardUpdateListener(), this);
             Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::updateScoreboard);
         }
@@ -94,6 +103,7 @@ public class Clans extends JavaPlugin{
         return inviteManager;
     }
 
+    @Deprecated
     public static JavaPlugin getPlugin() {
         return plugin;
     }

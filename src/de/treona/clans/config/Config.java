@@ -14,8 +14,10 @@ public interface Config {
 
     int getBaseElo();
 
-    boolean getSetClanTagTabPrefix();
+    boolean setClanTagTabPrefix();
 
     int getEloK();
+
+    boolean flushScoreboardOnJoin();
 
 }
