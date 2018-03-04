@@ -7,13 +7,13 @@ import de.treona.clans.db.DatabaseCredentials;
 import de.treona.clans.db.DatabaseManager;
 import de.treona.clans.listener.ScoreboardUpdateListener;
 import de.treona.clans.managers.InviteManager;
+import de.treona.clans.managers.ScoreboardManager;
 import de.treona.clans.util.ScoreboardUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Team;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,16 +27,17 @@ public class Clans extends JavaPlugin{
     private static JavaPlugin plugin;
     private static ConfigManager configManager;
     private static DatabaseManager databaseManager;
+    private static ScoreboardManager scoreboardManager;
 
     @Override
     public void onEnable() {
-        super.getCommand("Clan").setExecutor(new ClanCommand());
+        super.getCommand("Clan").setExecutor(new ClanCommand(this));
         plugin = this;
 
         configManager = new ConfigManager(this);
         configManager.loadConfig();
         databaseManager = new DatabaseManager(this.getDatabaseCredentials());
-        inviteManager = new InviteManager();
+        inviteManager = new InviteManager(this);
 
         if(!databaseManager.canConnect()){
             super.getLogger().warning("Can't connect to the database. Are the credentials correctly set?");
@@ -50,15 +51,13 @@ public class Clans extends JavaPlugin{
             super.getLogger().info("Finished initializing.");
         }
 
-        if(configManager.getConfig().flushScoreboardOnJoin()){
-            Bukkit.getScoreboardManager().getMainScoreboard().clearSlot(DisplaySlot.PLAYER_LIST);
-            Bukkit.getScoreboardManager().getMainScoreboard().getTeams().forEach(Team::unregister);
-            Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::flushScoreboard);
-        }
-
         if(configManager.getConfig().setClanTagTabPrefix()){
-            Bukkit.getPluginManager().registerEvents(new ScoreboardUpdateListener(), this);
-            Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::updateScoreboard);
+            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                scoreboardManager = new ScoreboardManager(this);
+                scoreboardManager.init();
+                Bukkit.getPluginManager().registerEvents(new ScoreboardUpdateListener(), this);
+                ScoreboardUtil.updateScoreboard();
+            });
         }
     }
 
@@ -108,6 +107,10 @@ public class Clans extends JavaPlugin{
         return plugin;
     }
 
+    public static List<Clan> getClans(){
+        return databaseManager.getClans();
+    }
+
     public static Clan getClan(String clanName){
         return databaseManager.getClan(clanName);
     }
@@ -140,5 +143,15 @@ public class Clans extends JavaPlugin{
         databaseManager.addClanLoss(clan.getClanId());
     }
 
+    public static ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
+    }
 
+    /**
+     * Will return you a scoreboard with teams and prefixes according to the players clans.
+     * @return @{@link Scoreboard} a scoreboard by default or @{@code null} if the clan prefixes are disabled
+     */
+    public static Scoreboard getClansScoreboard(){
+        return scoreboardManager.getScoreboard();
+    }
 }

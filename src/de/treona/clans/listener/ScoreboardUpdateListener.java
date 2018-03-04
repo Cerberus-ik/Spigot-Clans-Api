@@ -18,7 +18,7 @@ public class ScoreboardUpdateListener implements Listener {
         }
 
         if(Clans.getConfigManager().getConfig().setClanTagTabPrefix()){
-            Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::updateScoreboard);
+            event.getPlayer().setScoreboard(Clans.getClansScoreboard());
         }
     }
 }

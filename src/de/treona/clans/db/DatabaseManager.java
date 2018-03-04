@@ -15,7 +15,7 @@ import java.util.UUID;
 @SuppressWarnings("Duplicates")
 public class DatabaseManager {
 
-    private MysqlDataSource dataSource;
+    private final MysqlDataSource dataSource;
 
     public DatabaseManager(DatabaseCredentials databaseCredentials) {
         this.dataSource = new MysqlDataSource();
@@ -105,13 +105,83 @@ public class DatabaseManager {
         return true;
     }
 
+    public List<Clan> getClans() {
+        List<Clan> clans = new ArrayList<>();
+        try {
+            Connection connection = this.dataSource.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT clanName, clanTag, wins, losses, members, owner, elo, clanId FROM `clans`;");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String clanName = resultSet.getString(1);
+                String clanTag = resultSet.getString(2);
+                int wins = resultSet.getInt(3);
+                int losses = resultSet.getInt(4);
+                List<UUID> members = new ArrayList<>();
+                JSONArray memberArray = new JSONArray(resultSet.getString(5));
+                for (int i = 0; i < memberArray.length(); i++) {
+                    members.add(UUID.fromString(memberArray.getString(i)));
+                }
+                UUID owner = UUID.fromString(resultSet.getString(6));
+                int elo = resultSet.getInt(7);
+                int clanId = resultSet.getInt(8);
+                clans.add(new Clan() {
+                    @Override
+                    public int getClanId() {
+                        return clanId;
+                    }
+
+                    @Override
+                    public String getClanName() {
+                        return clanName;
+                    }
+
+                    @Override
+                    public String getClanTag() {
+                        return clanTag;
+                    }
+
+                    @Override
+                    public int getWins() {
+                        return wins;
+                    }
+
+                    @Override
+                    public int getLosses() {
+                        return losses;
+                    }
+
+                    @Override
+                    public List<UUID> getMembers() {
+                        return members;
+                    }
+
+                    @Override
+                    public UUID getOwner() {
+                        return owner;
+                    }
+
+                    @Override
+                    public int getElo() {
+                        return elo;
+                    }
+                });
+            }
+            connection.close();
+            preparedStatement.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return clans;
+    }
+
     public Clan getClan(String clanName) {
         try {
             Connection connection = this.dataSource.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT clanId, clanTag, wins, losses, members, owner, elo FROM `clans` WHERE  clanName = ?;");
             preparedStatement.setString(1, clanName);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(!resultSet.next()){
+            if (!resultSet.next()) {
                 return null;
             }
             int clanId = resultSet.getInt(1);
@@ -181,7 +251,7 @@ public class DatabaseManager {
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT clanName, clanTag, wins, losses, members, owner, elo FROM `clans` WHERE clanId = ?;");
             preparedStatement.setInt(1, clanId);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(!resultSet.next()){
+            if (!resultSet.next()) {
                 return null;
             }
             String clanName = resultSet.getString(1);
@@ -252,10 +322,10 @@ public class DatabaseManager {
             ResultSet resultSet = preparedStatement.executeQuery();
             Clan clan = null;
             loop:
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 JSONArray memberArray = new JSONArray(resultSet.getString(2));
                 for (int i = 0; i < memberArray.length(); i++) {
-                    if(UUID.fromString(memberArray.getString(i)).equals(uuid)){
+                    if (UUID.fromString(memberArray.getString(i)).equals(uuid)) {
                         clan = this.getClan(resultSet.getInt(1));
                         break loop;
                     }
@@ -330,7 +400,7 @@ public class DatabaseManager {
         }
     }
 
-    public void updateMembers(int clanId, List<UUID> members){
+    public void updateMembers(int clanId, List<UUID> members) {
         try {
             Connection connection = this.dataSource.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement("UPDATE clans SET members= ? WHERE clanId = ?;");
@@ -346,7 +416,7 @@ public class DatabaseManager {
         }
     }
 
-    public void deleteClan(int clanId){
+    public void deleteClan(int clanId) {
         try {
             Connection connection = this.dataSource.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM clans WHERE clanId = ?;");

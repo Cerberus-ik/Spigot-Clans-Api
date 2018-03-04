@@ -11,9 +11,9 @@ import java.io.*;
 public class ConfigManager {
 
     private Config config;
-    private File configFile;
-    private File configDirectory;
-    private JavaPlugin javaPlugin;
+    private final File configFile;
+    private final File configDirectory;
+    private final JavaPlugin javaPlugin;
 
     public ConfigManager(JavaPlugin javaPlugin) {
         this.javaPlugin = javaPlugin;

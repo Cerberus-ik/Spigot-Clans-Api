@@ -6,6 +6,7 @@ import de.treona.clans.common.Invite;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,12 @@ import java.util.UUID;
 
 public class InviteManager {
 
-    private List<Invite> invites;
+    private final List<Invite> invites;
+    private final JavaPlugin javaPlugin;
 
-    public InviteManager() {
+    public InviteManager(JavaPlugin javaPlugin) {
         this.invites = new ArrayList<>();
+        this.javaPlugin = javaPlugin;
     }
 
     public void sendInvite(Invite invite){
@@ -38,17 +41,23 @@ public class InviteManager {
         if(this.invites.stream().noneMatch(invite -> invite.getClan().getClanName().equals(clanName))){
             return false;
         }
-        Clan clan = this.invites.stream().filter(invite -> invite.getTargetPlayer().equals(player) && invite.getClan().getClanName().equals(clanName)).findFirst().orElse(null).getClan();
+        Invite invite = this.invites.stream()
+                .filter(streamInvite -> streamInvite.getTargetPlayer().equals(player)
+                        && streamInvite.getClan().getClanName().equals(clanName))
+                .findFirst()
+                .orElse(null);
+        if(invite == null){
+            return false;
+        }
+        Clan clan = invite.getClan();
         List<UUID> members = clan.getMembers();
         members.add(player.getUniqueId());
         Clans.updateClanMembers(clan, members);
         Player owner = Bukkit.getPlayer(clan.getOwner());
         if(owner != null){
-            Bukkit.getScheduler().runTask(Clans.getPlugin(), () -> {
-                owner.sendMessage(Clans.PREFIX_COLOR + " " + player.getName() + " accepted your invitation.");
-            });
+            Bukkit.getScheduler().runTask(this.javaPlugin, () -> owner.sendMessage(Clans.PREFIX_COLOR + " " + player.getName() + " accepted your invitation."));
         }
-        this.invites.removeIf(invite -> invite.getTargetPlayer().equals(player));
+        this.invites.removeIf(streamInvite -> streamInvite.getTargetPlayer().equals(player));
         return true;
     }
 }

@@ -8,17 +8,23 @@ import de.treona.clans.util.TreonaSound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 public class ClanCommand implements CommandExecutor {
+
+    private final JavaPlugin javaPlugin;
+
+    public ClanCommand(JavaPlugin javaPlugin) {
+        this.javaPlugin = javaPlugin;
+    }
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
@@ -63,7 +69,7 @@ public class ClanCommand implements CommandExecutor {
     }
 
     private void help(CommandSender commandSender, String[] args) {
-        Bukkit.getScheduler().runTaskAsynchronously(Clans.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             Player player = (Player) commandSender;
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan delete " + ChatColor.AQUA + "Deletes your clan.");
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan help " + ChatColor.AQUA + "Show you this help.");
@@ -76,7 +82,7 @@ public class ClanCommand implements CommandExecutor {
     }
 
     private void delete(CommandSender commandSender, String[] args) {
-        Bukkit.getScheduler().runTaskAsynchronously(Clans.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             Player player = (Player) commandSender;
             Clan clan = Clans.getClan(player);
             if (clan == null) {
@@ -89,6 +95,8 @@ public class ClanCommand implements CommandExecutor {
             }
             Clans.getDatabaseManager().deleteClan(clan.getClanId());
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.RED + " You deleted the clan: " + ChatColor.DARK_PURPLE + clan.getClanName());
+            Clans.getScoreboardManager().removeClan(clan);
+            ScoreboardUtil.updateScoreboard();
             clan.getMembers().forEach(uuid -> {
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
                 if (offlinePlayer.isOnline() && !offlinePlayer.getUniqueId().equals(clan.getOwner())) {
@@ -99,7 +107,7 @@ public class ClanCommand implements CommandExecutor {
     }
 
     private void kickPlayer(CommandSender commandSender, String[] args) {
-        Bukkit.getScheduler().runTaskAsynchronously(Clans.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             Player player = (Player) commandSender;
             if (args.length == 1) {
                 player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " Specify a player to kick with: " + ChatColor.GRAY + "/clans kick <player>");
@@ -134,6 +142,8 @@ public class ClanCommand implements CommandExecutor {
             if (targetPlayer.isOnline()) {
                 targetPlayer.getPlayer().sendMessage(Clans.PREFIX_COLOR + ChatColor.RED + " You got kicked from " + ChatColor.DARK_PURPLE + clan.getClanName());
             }
+            Clans.getScoreboardManager().removePlayer(clan, targetPlayer);
+            ScoreboardUtil.updateScoreboard();
         });
     }
 
@@ -150,13 +160,15 @@ public class ClanCommand implements CommandExecutor {
         if (Clans.getInviteManager().accept(player, args[1])) {
             player.sendMessage(Clans.PREFIX_COLOR + " You successfully joined: " + ChatColor.RESET + args[1]);
             player.playSound(player.getLocation(), TreonaSound.LEVEL_UP.getBukkitSound(), 1, 1);
+            Clans.getScoreboardManager().addPlayer(Clans.getClan(player), player);
+            ScoreboardUtil.updateScoreboard();
         } else {
             player.sendMessage(Clans.PREFIX_COLOR + " You don't have an invite from this clan.");
         }
     }
 
     private void invitePlayer(CommandSender commandSender, String[] args) {
-        Bukkit.getScheduler().runTaskAsynchronously(Clans.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             Player player = (Player) commandSender;
             Clan clan = Clans.getClan(player.getUniqueId());
             if (clan == null) {
@@ -196,7 +208,7 @@ public class ClanCommand implements CommandExecutor {
     }
 
     private void createClan(CommandSender commandSender, String[] args) {
-        Bukkit.getScheduler().runTaskAsynchronously(Clans.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             if (args.length < 3) {
                 commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You can create a clan with: " + ChatColor.GRAY + "/clans create <name> <tag>");
                 return;
@@ -214,13 +226,14 @@ public class ClanCommand implements CommandExecutor {
             Clans.getDatabaseManager().createClan(clanName, args[2], Clans.getConfigManager().getConfig().getBaseElo(), player.getUniqueId());
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GREEN + " Your clan got created successfully.");
             player.playSound(player.getLocation(), TreonaSound.LEVEL_UP.getBukkitSound(), 1, 1);
-            Bukkit.getOnlinePlayers().forEach(ScoreboardUtil::updateScoreboard);
+            Clans.getScoreboardManager().registerClan(Clans.getClan(player));
+            ScoreboardUtil.updateScoreboard();
         });
     }
 
     private void printStats(CommandSender commandSender, String[] args) {
         Player player = (Player) commandSender;
-        Bukkit.getScheduler().runTaskAsynchronously(Clans.getPlugin(), () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             if (args.length == 1) {
                 Clan clan = Clans.getClan(player.getUniqueId());
                 if (clan == null) {

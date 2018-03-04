@@ -200,8 +200,8 @@ public enum TreonaSound {
     VILLAGER_NO("VILLAGER_NO", "ENTITY_VILLAGER_NO"),
     VILLAGER_YES("VILLAGER_YES", "ENTITY_VILLAGER_YES");
 
-    private String pre19sound;
-    private String post19sound;
+    private final String pre19sound;
+    private final String post19sound;
     private Sound resolvedSound = null;
 
     TreonaSound(String pre19sound, String post19sound) {
