@@ -27,7 +27,7 @@ public class ConfigManager {
         }
         try {
             YamlConfiguration yamlConfiguration = new YamlConfiguration();
-            yamlConfiguration.loadFromString(FileUtils.readFileToString(this.configFile));
+            yamlConfiguration.loadFromString(FileUtils.readFileToString(this.configFile, "UTF-8"));
             if (!yamlConfiguration.contains("configVersion") || yamlConfiguration.getInt("configVersion") < 2) {
                 this.backupConfig();
                 this.writeDefaultConfig();
@@ -69,11 +69,6 @@ public class ConfigManager {
                 }
 
                 @Override
-                public int getEloK() {
-                    return yamlConfiguration.getInt("eloK");
-                }
-
-                @Override
                 public boolean flushScoreboardOnJoin() {
                     return yamlConfiguration.getBoolean("flushScoreboardOnJoin");
                 }
@@ -108,7 +103,7 @@ public class ConfigManager {
 
         }
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(this.configFile))) {
-            IOUtils.copy(inputStream, bufferedWriter);
+            IOUtils.copy(inputStream, bufferedWriter, "UTF-8");
         } catch (IOException e) {
             e.printStackTrace();
         }

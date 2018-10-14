@@ -6,7 +6,9 @@ import de.treona.clans.config.ConfigManager;
 import de.treona.clans.db.DatabaseCredentials;
 import de.treona.clans.db.DatabaseManager;
 import de.treona.clans.listener.ScoreboardUpdateListener;
+import de.treona.clans.managers.DisabledScoreboardManager;
 import de.treona.clans.managers.InviteManager;
+import de.treona.clans.managers.EnabledScoreboardManager;
 import de.treona.clans.managers.ScoreboardManager;
 import de.treona.clans.util.ScoreboardUtil;
 import org.bukkit.Bukkit;
@@ -53,12 +55,12 @@ public class Clans extends JavaPlugin{
 
         if(configManager.getConfig().setClanTagTabPrefix()){
             Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                scoreboardManager = new ScoreboardManager(this);
-                scoreboardManager.init();
+                scoreboardManager = new EnabledScoreboardManager(this);
                 Bukkit.getPluginManager().registerEvents(new ScoreboardUpdateListener(), this);
                 ScoreboardUtil.updateScoreboard();
             });
-        }
+        }else
+            scoreboardManager = new DisabledScoreboardManager();
     }
 
     private DatabaseCredentials getDatabaseCredentials(){
@@ -102,7 +104,6 @@ public class Clans extends JavaPlugin{
         return inviteManager;
     }
 
-    @Deprecated
     public static JavaPlugin getPlugin() {
         return plugin;
     }
@@ -149,7 +150,7 @@ public class Clans extends JavaPlugin{
 
     /**
      * Will return you a scoreboard with teams and prefixes according to the players clans.
-     * @return @{@link Scoreboard} a scoreboard by default or @{@code null} if the clan prefixes are disabled
+     * @return @{@link Scoreboard} a scoreboard by default or an empty scoreboard if the clan prefixes are disabled
      */
     public static Scoreboard getClansScoreboard(){
         return scoreboardManager.getScoreboard();

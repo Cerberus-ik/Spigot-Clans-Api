@@ -30,12 +30,12 @@ public class InviteManager {
         }
     }
 
-    public boolean hasInvite(Player player){
-        return this.invites.stream().anyMatch(invite -> invite.getTargetPlayer().equals(player));
+    public boolean hasNoInvite(Player player){
+        return this.invites.stream().noneMatch(invite -> invite.getTargetPlayer().equals(player));
     }
 
     public boolean accept(Player player, String clanName){
-        if(!this.hasInvite(player)){
+        if(this.hasNoInvite(player)){
             return false;
         }
         if(this.invites.stream().noneMatch(invite -> invite.getClan().getClanName().equals(clanName))){

@@ -49,7 +49,7 @@ public class ClanCommand implements CommandExecutor {
             return true;
         }
         if (args[0].equalsIgnoreCase("delete")) {
-            this.delete(commandSender, args);
+            this.delete(commandSender);
             return true;
         }
         if (args[0].equalsIgnoreCase("kick")) {
@@ -61,27 +61,32 @@ public class ClanCommand implements CommandExecutor {
             return true;
         }
         if (args[0].equalsIgnoreCase("help")) {
-            this.help(commandSender, args);
+            this.help(commandSender);
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("leave")) {
+            this.leaveClan(commandSender);
             return true;
         }
         commandSender.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " Unknown argument. Use: " + ChatColor.AQUA + "/clan help" + ChatColor.YELLOW + " for more information.");
         return true;
     }
 
-    private void help(CommandSender commandSender, String[] args) {
+    private void help(CommandSender commandSender) {
         Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             Player player = (Player) commandSender;
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan delete " + ChatColor.AQUA + "Deletes your clan.");
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan help " + ChatColor.AQUA + "Show you this help.");
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan stats <clan> " + ChatColor.AQUA + "Show's you a clan stats.");
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan kick <player> " + ChatColor.AQUA + "Kicks a player.");
+            player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan leave " + ChatColor.AQUA + "Makes you leave a clan.");
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan join <clanName> " + ChatColor.AQUA + "Let's you join a clan.");
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan invite <player> " + ChatColor.AQUA + "Let's you invite a player.");
             player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GRAY + " /clan create <clanName> <tag> " + ChatColor.AQUA + "Creates a clan.");
         });
     }
 
-    private void delete(CommandSender commandSender, String[] args) {
+    private void delete(CommandSender commandSender) {
         Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             Player player = (Player) commandSender;
             Clan clan = Clans.getClan(player);
@@ -147,9 +152,34 @@ public class ClanCommand implements CommandExecutor {
         });
     }
 
+    private void leaveClan(CommandSender commandSender) {
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
+            Player player = (Player) commandSender;
+            Clan clan = Clans.getClan(player);
+            if (clan == null) {
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " You are not in a clan.");
+                return;
+            }
+            if (clan.getOwner().equals(player.getUniqueId())) {
+                player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " If you are the owner you have to delete the clan.");
+                return;
+            }
+            List<UUID> members = clan.getMembers();
+            members.remove(player.getUniqueId());
+            Clans.updateClanMembers(clan, members);
+            player.sendMessage(Clans.PREFIX_COLOR + ChatColor.GREEN + " You left the clan successfully.");
+            Player owner = Bukkit.getPlayer(clan.getOwner());
+            if (owner != null && owner.isOnline()) {
+                owner.sendMessage(Clans.PREFIX_COLOR + ChatColor.RED + " " + player.getDisplayName() + " Left the clan: " + ChatColor.DARK_PURPLE + clan.getClanName());
+            }
+            Clans.getScoreboardManager().removePlayer(clan, player);
+            ScoreboardUtil.updateScoreboard();
+        });
+    }
+
     private void acceptInvite(CommandSender commandSender, String[] args) {
         Player player = (Player) commandSender;
-        if (!Clans.getInviteManager().hasInvite(player)) {
+        if (Clans.getInviteManager().hasNoInvite(player)) {
             player.sendMessage(Clans.PREFIX_COLOR + " You don't have any invites.");
             return;
         }
@@ -237,14 +267,14 @@ public class ClanCommand implements CommandExecutor {
             if (args.length == 1) {
                 Clan clan = Clans.getClan(player.getUniqueId());
                 if (clan == null) {
-                    player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + "You didn't specify a clans and are not in a clans yourself. Try " + ChatColor.GRAY + "/clans stats <clanName>");
+                    player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + "You didn't specify a clan and are not in a clans yourself. Try " + ChatColor.GRAY + "/clans stats <clanName>");
                 } else {
                     this.printStats(player, clan);
                 }
             } else {
                 Clan clan = Clans.getClan(args[1]);
                 if (clan == null) {
-                    player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This clans does not exist.");
+                    player.sendMessage(Clans.PREFIX_COLOR + ChatColor.YELLOW + " This clan does not exist.");
                 } else {
                     this.printStats(player, clan);
                 }

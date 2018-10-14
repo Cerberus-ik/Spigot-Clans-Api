@@ -16,8 +16,6 @@ public interface Config {
 
     boolean setClanTagTabPrefix();
 
-    int getEloK();
-
     boolean flushScoreboardOnJoin();
 
 }

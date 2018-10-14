@@ -10,7 +10,6 @@
 
 #Elo
 eloBase: 1000
-eloK: 20
 
 #Scoreboard prefix
 setClanTagTabPrefix: false
