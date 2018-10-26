@@ -7,8 +7,8 @@ import de.treona.clans.db.DatabaseCredentials;
 import de.treona.clans.db.DatabaseManager;
 import de.treona.clans.listener.ScoreboardUpdateListener;
 import de.treona.clans.managers.DisabledScoreboardManager;
-import de.treona.clans.managers.InviteManager;
 import de.treona.clans.managers.EnabledScoreboardManager;
+import de.treona.clans.managers.InviteManager;
 import de.treona.clans.managers.ScoreboardManager;
 import de.treona.clans.util.ScoreboardUtil;
 import org.bukkit.Bukkit;
@@ -35,12 +35,10 @@ public class Clans extends JavaPlugin{
     public void onEnable() {
         super.getCommand("Clan").setExecutor(new ClanCommand(this));
         plugin = this;
-
         configManager = new ConfigManager(this);
         configManager.loadConfig();
         databaseManager = new DatabaseManager(this.getDatabaseCredentials());
         inviteManager = new InviteManager(this);
-
         if(!databaseManager.canConnect()){
             super.getLogger().warning("Can't connect to the database. Are the credentials correctly set?");
             super.getLogger().warning("This plugin requires a database! Shutting down...");
